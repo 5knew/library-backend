@@ -1,0 +1,32 @@
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+    <!-- Create base tables -->
+    <include file="changelog-003-create-author-table.xml" relativeToChangelogFile="true" />
+    <include file="changelog-001-create-category-table.xml" relativeToChangelogFile="true" />
+    <include file="changelog-005-create-book-table.xml" relativeToChangelogFile="true" />
+    <include file="changelog-006-create-book-category-table.xml" relativeToChangelogFile="true" />
+    <include file="changelog-008-create-book-author-table.xml" relativeToChangelogFile="true" />
+
+    <include file="changelog-010-load-books-data.xml" relativeToChangelogFile="true" />
+
+    <include file="changelog-002-load-category-data.xml" relativeToChangelogFile="true" />
+    <include file="changelog-011-load-book-category-data.xml" relativeToChangelogFile="true" />
+
+    <include file="changelog-004-load-author-data.xml" relativeToChangelogFile="true" />
+    <include file="changelog-012-load-book-author-data.xml" relativeToChangelogFile="true" />
+
+
+
+    <!-- Create join tables for many-to-many relationships -->
+    <include file="changelog-007-create-book-photos-table.xml" relativeToChangelogFile="true" />
+
+    <!-- Load data into base tables -->
+
+    <!-- Load data into join tables -->
+    <include file="changelog-013-load-book-photos-data.xml" relativeToChangelogFile="true" />
+
+</databaseChangeLog>

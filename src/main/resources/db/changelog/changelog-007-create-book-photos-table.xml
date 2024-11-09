@@ -1,0 +1,31 @@
+<!-- src/main/resources/db/changelog/changelog-007-create-book-photos-table.xml -->
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+    <changeSet id="007" author="admin">
+        <validCheckSum>ANY</validCheckSum>
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="book_photos"/>
+            </not>
+        </preConditions>
+        <createTable tableName="book_photos">
+            <column name="book_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="photo_url" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addForeignKeyConstraint
+                baseTableName="book_photos"
+                baseColumnNames="book_id"
+                referencedTableName="book"
+                referencedColumnNames="id"
+                constraintName="fk_book_photos_book_id"/>
+    </changeSet>
+</databaseChangeLog>
