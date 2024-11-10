@@ -18,5 +18,10 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
+    @ExceptionHandler(BookCopiesNotFoundException.class)
+    public ResponseEntity<String> handleBookCopiesNotFoundException(BookCopiesNotFoundException ex) {
+        return new ResponseEntity<>(ex.getMessage(), HttpStatus.NOT_FOUND);
+    }
+
 
 }

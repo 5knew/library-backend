@@ -26,4 +26,6 @@ public interface BookCopyService {
     List<BookCopy> searchBookCopies(
             Optional<BigDecimal> minPrice, Optional<BigDecimal> maxPrice,
             Optional<Date> startDate, Optional<Date> endDate);
+
+    List<BookCopy> getBookCopiesByBookId(Long bookId);
 }

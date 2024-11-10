@@ -2,6 +2,7 @@ package com.aues.library.service.impl;
 
 import com.aues.library.dto.BookCopyRequest;
 import com.aues.library.dto.UpdatedBookCopyRequest;
+import com.aues.library.exceptions.BookCopiesNotFoundException;
 import com.aues.library.exceptions.BookCopyNotFoundException;
 import com.aues.library.exceptions.BookCreationException;
 import com.aues.library.model.Book;
@@ -125,4 +126,13 @@ public class BookCopyServiceImpl implements BookCopyService {
         );
         return bookCopyRepository.findAll(spec);
     }
+
+    @Override
+    public List<BookCopy> getBookCopiesByBookId(Long bookId) {
+        return bookCopyRepository.findByBookId(bookId);
+    }
+
+
+
+
 }

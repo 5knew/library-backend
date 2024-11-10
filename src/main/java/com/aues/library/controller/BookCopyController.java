@@ -88,6 +88,15 @@ public class BookCopyController {
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
+    @GetMapping("/by-book/{bookId}")
+    public ResponseEntity<List<BookCopy>> getBookCopiesByBookId(@PathVariable Long bookId) {
+        List<BookCopy> bookCopies = bookCopyService.getBookCopiesByBookId(bookId);
+        return new ResponseEntity<>(bookCopies, HttpStatus.OK);
+    }
+
+
+
+
     @GetMapping("/search")
     public ResponseEntity<List<BookCopy>> searchBookCopies(
             @RequestParam Optional<BigDecimal> minPrice,

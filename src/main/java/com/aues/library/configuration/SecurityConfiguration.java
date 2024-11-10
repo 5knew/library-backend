@@ -29,26 +29,33 @@ public class SecurityConfiguration implements WebMvcConfigurer {
     private final UserDetailsServiceImpl userService;
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception{
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http.csrf(AbstractHttpConfigurer::disable)
-                .authorizeHttpRequests(request -> request.requestMatchers("api/v1/auth/**")
-                        .permitAll()
-//                        .requestMatchers("api/v1/admin/**").hasAnyAuthority(Role.ROLE_ADMIN.name(),
-//                                Role.ROLE_LIBRARIAN.name())
-                        .requestMatchers("**").hasAnyAuthority(Role.ROLE_ADMIN.name(),
-                                Role.ROLE_LIBRARIAN.name(), Role.ROLE_STUDENT.name())
-//                        .requestMatchers("api/v1/**").hasAnyAuthority(Role.ROLE_STUDENT.name(), Role.ROLE_ADMIN.name(),
-//                                Role.ROLE_LIBRARIAN.name())
-                        .anyRequest().authenticated())
+                .authorizeHttpRequests(request -> request
+                        // Public endpoints
+                        .requestMatchers("/api/v1/auth/**").permitAll()  // Allow access to auth endpoints
+                        .requestMatchers("/api/v1/book-copies/by-book/**").permitAll()  // Allow public access to book copies by book ID
 
+                        // Role-based access control for admin and librarian endpoints
+                        .requestMatchers("/api/v1/admin/**").hasAnyAuthority(Role.ROLE_ADMIN.name(), Role.ROLE_LIBRARIAN.name())
 
+                        // Other API endpoints requiring specific roles
+                        .requestMatchers("/api/v1/**").hasAnyAuthority(
+                                Role.ROLE_ADMIN.name(),
+                                Role.ROLE_LIBRARIAN.name(),
+                                Role.ROLE_STUDENT.name()
+                        )
+
+                        // Require authentication for any other requests
+                        .anyRequest().authenticated()
+                )
                 .sessionManagement(manager -> manager.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authenticationProvider(authenticationProvider()).addFilterBefore(
-                        jwtAuthentificationFilter, UsernamePasswordAuthenticationFilter.class
-                );
-        return http.build();
+                .authenticationProvider(authenticationProvider())
+                .addFilterBefore(jwtAuthentificationFilter, UsernamePasswordAuthenticationFilter.class);
 
+        return http.build();
     }
+
 
     @Bean
     public AuthenticationProvider authenticationProvider(){
