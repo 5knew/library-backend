@@ -1,7 +1,6 @@
 package com.aues.library.configuration;
 
 import com.aues.library.model.enums.Role;
-import com.aues.library.service.UserService;
 import com.aues.library.service.impl.UserDetailsServiceImpl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -32,12 +31,14 @@ public class SecurityConfiguration implements WebMvcConfigurer {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http.csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(request -> request
+                        .requestMatchers("/api/v1/admin/books/search-basic", "/api/v1/admin/books/advanced-search")
+                        .permitAll() // Allow unauthenticated access to search endpoints
                         // Public endpoints
                         .requestMatchers("/api/v1/auth/**").permitAll()  // Allow access to auth endpoints
                         .requestMatchers("/api/v1/book-copies/by-book/**").permitAll()  // Allow public access to book copies by book ID
 
                         // Role-based access control for admin and librarian endpoints
-                        .requestMatchers("/api/v1/admin/**").hasAnyAuthority(Role.ROLE_ADMIN.name(), Role.ROLE_LIBRARIAN.name())
+                        .requestMatchers("/api/v1/admin/**").hasAnyAuthority(Role.ROLE_ADMIN.name(), Role.ROLE_LIBRARIAN.name(), Role.ROLE_STUDENT.name())
 
                         // Other API endpoints requiring specific roles
                         .requestMatchers("/api/v1/**").hasAnyAuthority(

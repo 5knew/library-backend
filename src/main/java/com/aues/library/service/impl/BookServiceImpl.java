@@ -1,7 +1,6 @@
 package com.aues.library.service.impl;
 
 import com.aues.library.controller.BookController;
-import com.aues.library.dto.UpdateBookRequest;
 import com.aues.library.exceptions.BookCreationException;
 import com.aues.library.exceptions.BookDeletionException;
 import com.aues.library.exceptions.BookNotFoundException;
@@ -213,9 +212,8 @@ public class BookServiceImpl implements BookService {
         }
     }
 
-    @Override
     public List<Book> searchBooks(String query) {
-        return bookRepository.findAllByNameContainingIgnoreCase(query);
+        return bookRepository.findByNameContainingIgnoreCaseOrAuthors_NameContainingIgnoreCase(query, query);
     }
 
     @Override
@@ -238,6 +236,10 @@ public class BookServiceImpl implements BookService {
         }
 
         return bookRepository.findAll(spec);
+    }
+
+    public List<Book> getBooksByCategoryId(Long categoryId) {
+        return bookRepository.findByCategories_Id(categoryId); // Ensure this method exists in your repository
     }
 
 

@@ -1,10 +1,8 @@
 package com.aues.library.service;
 
-import com.aues.library.dto.UpdateBookRequest;
 import com.aues.library.model.Book;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
@@ -34,5 +32,7 @@ public interface BookService {
 
     List<Book> searchBooksAdvanced(Optional<String> description, Optional<String> isbn,
                         Optional<List<Long>> authorIds, Optional<List<Long>> categoryIds);
+
+    List<Book> getBooksByCategoryId(Long categoryId);
 }
 

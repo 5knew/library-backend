@@ -1,28 +1,17 @@
 package com.aues.library.controller;
 
-import com.aues.library.dto.BookCreationRequest;
-import com.aues.library.dto.UpdateBookRequest;
-import com.aues.library.exceptions.BookCreationException;
 import com.aues.library.exceptions.BookDeletionException;
 import com.aues.library.exceptions.BookNotFoundException;
-import com.aues.library.exceptions.BookUpdateException;
 import com.aues.library.model.Book;
 import com.aues.library.service.BookService;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import jakarta.persistence.EntityNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import com.fasterxml.jackson.databind.ObjectMapper; // Ensure ObjectMapper is imported
-
-import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
@@ -48,9 +37,9 @@ public class BookController {
             @RequestParam("isbn") String isbn,
             @RequestParam("authorIds") List<Long> authorIds,
             @RequestParam("categoryIds") List<Long> categoryIds,
-            @RequestParam(value = "fullPdfFile", required = true) MultipartFile fullPdfFile,
-            @RequestParam(value = "previewPdfFile", required = true) MultipartFile previewPdfFile,
-            @RequestParam(value = "imageFile", required = true) MultipartFile imageFile
+            @RequestParam(value = "fullPdfFile") MultipartFile fullPdfFile,
+            @RequestParam(value = "previewPdfFile") MultipartFile previewPdfFile,
+            @RequestParam(value = "imageFile") MultipartFile imageFile
     ) {
         Book book = bookService.createBook(
                 fullPdfFile, previewPdfFile, imageFile, name, authorIds, description, categoryIds, isbn
@@ -113,10 +102,11 @@ public class BookController {
 
     // GET endpoint for basic book search by query
     @GetMapping("/search-basic")
-    public ResponseEntity<List<Book>> searchBooks(@RequestParam String query) {
+    public ResponseEntity<List<Book>> searchBooks(@RequestParam("q") String query) {
         List<Book> books = bookService.searchBooks(query);
-        return books.isEmpty() ? new ResponseEntity<>(HttpStatus.NO_CONTENT) : new ResponseEntity<>(books, HttpStatus.OK);
+        return ResponseEntity.ok(books);
     }
+
 
     @GetMapping("/search-advanced")
     public ResponseEntity<List<Book>> searchBooksAdvanced(
@@ -134,13 +124,19 @@ public class BookController {
                 isbn.filter(isb -> !isb.isEmpty()),            // Only add filter if non-empty
                 authorIds, categoryIds);
 
-        if (results.isEmpty()) {
-            logger.debug("No books found matching filters.");
-            return ResponseEntity.noContent().build();  // Returns 204 NO_CONTENT
-        } else {
-            return ResponseEntity.ok(results);
+        return results.isEmpty() ? ResponseEntity.noContent().build() : ResponseEntity.ok(results);
+    }
+
+    @GetMapping("/category/{categoryId}")
+    public ResponseEntity<List<Book>> getBooksByCategoryId(@PathVariable Long categoryId) {
+        try {
+            List<Book> books = bookService.getBooksByCategoryId(categoryId);
+            return books.isEmpty() ? new ResponseEntity<>(HttpStatus.NO_CONTENT) : ResponseEntity.ok(books);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
+
 
 
 }

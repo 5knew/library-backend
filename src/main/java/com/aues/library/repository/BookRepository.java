@@ -12,7 +12,10 @@ import java.util.List;
 @Repository
 public interface BookRepository extends JpaRepository<Book, Long>, JpaSpecificationExecutor<Book> {
     // Search for books by name with a case-insensitive match
-    List<Book> findAllByNameContainingIgnoreCase(String name);
     @Query("SELECT COUNT(b) > 0 FROM Book b JOIN b.authors a WHERE a.id = :authorId")
     boolean existsByAuthorId(@Param("authorId") Long authorId);
+
+    List<Book> findByNameContainingIgnoreCaseOrAuthors_NameContainingIgnoreCase(String query, String query1);
+
+    List<Book> findByCategories_Id(Long categoryId);
 }
