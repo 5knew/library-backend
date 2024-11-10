@@ -31,7 +31,8 @@ public class SecurityConfiguration implements WebMvcConfigurer {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http.csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(request -> request
-                        .requestMatchers("/api/v1/admin/books/search-basic", "/api/v1/admin/books/advanced-search")
+                        .requestMatchers("/api/v1/admin/books/search-basic", "/api/v1/admin/books/advanced-search"
+                        , "/api/v1/admin/books/")
                         .permitAll() // Allow unauthenticated access to search endpoints
                         // Public endpoints
                         .requestMatchers("/api/v1/auth/**").permitAll()  // Allow access to auth endpoints
