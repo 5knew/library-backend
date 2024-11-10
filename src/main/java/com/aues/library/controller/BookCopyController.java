@@ -2,10 +2,8 @@ package com.aues.library.controller;
 
 import com.aues.library.dto.BookCopyRequest;
 import com.aues.library.dto.UpdatedBookCopyRequest;
-import com.aues.library.model.Book;
 import com.aues.library.model.BookCopy;
 import com.aues.library.service.BookCopyService;
-import com.aues.library.service.BookService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;

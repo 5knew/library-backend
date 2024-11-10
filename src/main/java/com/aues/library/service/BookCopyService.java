@@ -2,10 +2,7 @@ package com.aues.library.service;
 
 import com.aues.library.dto.BookCopyRequest;
 import com.aues.library.dto.UpdatedBookCopyRequest;
-import com.aues.library.model.Book;
 import com.aues.library.model.BookCopy;
-import com.aues.library.service.impl.BookCopySpecification;
-import org.springframework.data.jpa.domain.Specification;
 
 import java.math.BigDecimal;
 import java.util.Date;
