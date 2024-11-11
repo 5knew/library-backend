@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @CrossOrigin(origins = "http://localhost:5173")
@@ -27,12 +28,13 @@ public class PaymentController {
     @PostMapping("/process")
     public ResponseEntity<?> processPayment(@RequestParam Long orderId, @RequestParam String userEmail) {
         try {
-            Payment payment = paymentService.processPayment(orderId, userEmail);
-            return new ResponseEntity<>(payment, HttpStatus.CREATED);
+            Map<String, String> response = paymentService.processPayment(orderId, userEmail);
+            return new ResponseEntity<>(response, HttpStatus.CREATED); // Возвращаем JSON с approvalUrl
         } catch (PaymentProcessingException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Payment processing error: " + e.getMessage());
         }
     }
+
 
     // Process payment notification from PayPal, with paymentId and payerId
     @PostMapping("/notification")
@@ -66,6 +68,22 @@ public class PaymentController {
             return new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
         }
     }
+
+    @GetMapping("/payment/success")
+    public String paymentSuccess(@RequestParam("paymentId") String paymentId, @RequestParam("PayerID") String payerId) {
+        try {
+            paymentService.handlePaymentNotification(paymentId, payerId);
+            return "redirect:/payment-success"; // Переадресация на страницу успеха на клиенте
+        } catch (PaymentProcessingException e) {
+            return "redirect:/payment-failure"; // Переадресация на страницу неудачной оплаты
+        }
+    }
+
+    @GetMapping("/payment/failure")
+    public String paymentFailure() {
+        return "redirect:/payment-failure"; // Переадресация на страницу неудачной оплаты
+    }
+
 
     @GetMapping("/transaction/{transactionId}")
     public ResponseEntity<Payment> getPaymentByTransactionId(@PathVariable String transactionId) {

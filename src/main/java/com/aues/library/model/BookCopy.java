@@ -7,6 +7,7 @@ import lombok.Setter;
 
 import java.math.BigDecimal;
 import java.util.Date;
+import java.util.List;
 
 @Data
 @Getter
@@ -27,5 +28,8 @@ public class BookCopy {
     private Date publicationDate;
     private String language;
     private String fullPdf;
+
+    @OneToMany(mappedBy = "bookCopy", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<FileMetadata> files;
 }
 

@@ -47,6 +47,8 @@ public class Book {
 
     private String previewPdf;
     private String fullPdf;
+
+
 }
 
 

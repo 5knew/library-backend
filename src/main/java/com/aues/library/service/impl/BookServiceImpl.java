@@ -57,13 +57,13 @@ public class BookServiceImpl implements BookService {
             // Upload files to Cloudinary if provided
             String fullPdfUrl = null;
             if (fullPdfFile != null && !fullPdfFile.isEmpty()) {
-                fullPdfUrl = cloudinaryService.uploadFile(fullPdfFile);
+                fullPdfUrl = cloudinaryService.uploadFileForBook(fullPdfFile);
             }
             String previewPdfUrl = null;
             if (previewPdfFile != null && !previewPdfFile.isEmpty()) {
-                previewPdfUrl = cloudinaryService.uploadFile(previewPdfFile);
+                previewPdfUrl = cloudinaryService.uploadFileForBook(previewPdfFile);
             }
-            String imageUrl = imageFile != null && !imageFile.isEmpty() ? cloudinaryService.uploadFile(imageFile) : null;
+            String imageUrl = imageFile != null && !imageFile.isEmpty() ? cloudinaryService.uploadFileForBook(imageFile) : null;
 
             // Retrieve categories by IDs
             List<Category> categories = categoryRepository.findAllById(categoryIds);
@@ -160,9 +160,9 @@ public class BookServiceImpl implements BookService {
     private String handleFileUpload(MultipartFile file, String existingUrl) {
         if (file != null && !file.isEmpty()) {
             if (existingUrl != null) {
-                cloudinaryService.deleteFile(existingUrl);
+                cloudinaryService.deleteFileForBook(existingUrl);
             }
-            return cloudinaryService.uploadFile(file);
+            return cloudinaryService.uploadFileForBook(file);
         }
         // Provide a default URL or throw an exception if `file` is required
         return existingUrl != null ? existingUrl : "default-placeholder-url";
@@ -197,9 +197,9 @@ public class BookServiceImpl implements BookService {
 
         try {
             // Delete PDF and images from Cloudinary
-            if (book.getFullPdf() != null) cloudinaryService.deleteFile(book.getFullPdf());
-            if (book.getPreviewPdf() != null) cloudinaryService.deleteFile(book.getPreviewPdf());
-            book.getPhotos().forEach(cloudinaryService::deleteFile);
+            if (book.getFullPdf() != null) cloudinaryService.deleteFileForBook(book.getFullPdf());
+            if (book.getPreviewPdf() != null) cloudinaryService.deleteFileForBook(book.getPreviewPdf());
+            book.getPhotos().forEach(cloudinaryService::deleteFileForBook);
 
             // Delete all copies of this book
             bookCopyRepository.deleteAllByBook(book);

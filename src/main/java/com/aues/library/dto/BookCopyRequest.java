@@ -14,5 +14,6 @@ public class BookCopyRequest {
     private String language;
     private MultipartFile fullPdf;
 
+
 }
 

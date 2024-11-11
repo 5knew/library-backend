@@ -42,30 +42,33 @@ public class BookCopyServiceImpl implements BookCopyService {
         Book book = bookRepository.findById(bookCopyRequest.getBookId())
                 .orElseThrow(() -> new BookCreationException("Book with ID " + bookCopyRequest.getBookId() + " not found."));
 
-        // Handle PDF file upload if present
-        String fullPdfUrl = null;
-        if (bookCopyRequest.getFullPdf() != null && !bookCopyRequest.getFullPdf().isEmpty()) {
-            fullPdfUrl = cloudinaryService.uploadFile(bookCopyRequest.getFullPdf());
-        }
-
-        // Construct BookCopy object
+        // Initialize and save BookCopy to get the ID
         BookCopy bookCopy = new BookCopy();
         bookCopy.setBook(book);
         bookCopy.setPrice(bookCopyRequest.getPrice());
         bookCopy.setPublicationDate(bookCopyRequest.getPublicationDate());
         bookCopy.setLanguage(bookCopyRequest.getLanguage());
-        bookCopy.setFullPdf(fullPdfUrl);
 
         try {
-            return bookCopyRepository.save(bookCopy);
+            // Save BookCopy to get its ID
+            bookCopy = bookCopyRepository.save(bookCopy);
+
+            // Handle PDF file upload and save metadata if present
+            if (bookCopyRequest.getFullPdf() != null && !bookCopyRequest.getFullPdf().isEmpty()) {
+                // Upload file and save metadata
+                String fullPdfUrl = cloudinaryService.uploadFile(bookCopyRequest.getFullPdf(), bookCopy.getId());
+                bookCopy.setFullPdf(fullPdfUrl); // Save the URL to the BookCopy for reference
+                bookCopy = bookCopyRepository.save(bookCopy); // Save the updated BookCopy with the PDF URL
+            }
+
+            return bookCopy;
         } catch (DataIntegrityViolationException e) {
             logger.error("Data integrity violation while creating book copy: ", e);
             throw new BookCreationException("A book copy with similar details already exists.");
         } catch (Exception e) {
             logger.error("Error creating book copy: ", e);
             throw new BookCreationException("Failed to create book copy.");
-        }
-    }
+        }}
 
     @Override
     public BookCopy getBookCopyById(Long id) {
@@ -96,7 +99,7 @@ public class BookCopyServiceImpl implements BookCopyService {
         }
 
         if (updatedBookCopyRequest.getFullPdf() != null && !updatedBookCopyRequest.getFullPdf().isEmpty()) {
-            String newFullPdfUrl = cloudinaryService.uploadFile(updatedBookCopyRequest.getFullPdf());
+            String newFullPdfUrl = cloudinaryService.uploadFile(updatedBookCopyRequest.getFullPdf(), id);
             existingBookCopy.setFullPdf(newFullPdfUrl);  // Update full PDF URL only if a new file is provided
         }
 
