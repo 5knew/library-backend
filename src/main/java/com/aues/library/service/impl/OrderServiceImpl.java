@@ -50,12 +50,24 @@ public class OrderServiceImpl implements OrderService {
 
         Order order = new Order();
         order.setUser(user);
-        order.setCartItems(cartItems);
         order.setOrderDate(new Date());
         order.setTotalAmount(totalAmount);
 
-        return orderRepository.save(order);
+        // Save the order to generate its ID
+        order = orderRepository.save(order);
+
+        // Set the order reference for each cart item and update them
+        for (CartItem cartItem : cartItems) {
+            cartItem.setOrder(order);
+        }
+        cartItemRepository.saveAll(cartItems); // Save the updated cart items
+
+        // Set the cart items in the order object if needed for return
+        order.setCartItems(cartItems);
+
+        return order;
     }
+
 
     @Override
     public Order getOrderById(Long id) {

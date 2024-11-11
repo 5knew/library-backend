@@ -25,15 +25,15 @@ import java.util.Optional;
 public class BookCopyServiceImpl implements BookCopyService {
 
     private final BookCopyRepository bookCopyRepository;
-    private final CloudinaryService cloudinaryService;
     private final BookRepository bookRepository;
     private static final Logger logger = LoggerFactory.getLogger(BookCopyServiceImpl.class);
+    private final S3Service s3Service;
 
     @Autowired
-    public BookCopyServiceImpl(BookCopyRepository bookCopyRepository, CloudinaryService cloudinaryService, BookRepository bookRepository) {
+    public BookCopyServiceImpl(BookCopyRepository bookCopyRepository, BookRepository bookRepository, S3Service s3Service) {
         this.bookCopyRepository = bookCopyRepository;
-        this.cloudinaryService = cloudinaryService;
         this.bookRepository = bookRepository;
+        this.s3Service = s3Service;
     }
 
     @Override
@@ -55,8 +55,8 @@ public class BookCopyServiceImpl implements BookCopyService {
 
             // Handle PDF file upload and save metadata if present
             if (bookCopyRequest.getFullPdf() != null && !bookCopyRequest.getFullPdf().isEmpty()) {
-                // Upload file and save metadata
-                String fullPdfUrl = cloudinaryService.uploadFile(bookCopyRequest.getFullPdf(), bookCopy.getId());
+                // Upload file to S3 and save URL
+                String fullPdfUrl = s3Service.uploadFile(bookCopyRequest.getFullPdf(), "books/" + bookCopy.getId() + "/fullPdf.pdf");
                 bookCopy.setFullPdf(fullPdfUrl); // Save the URL to the BookCopy for reference
                 bookCopy = bookCopyRepository.save(bookCopy); // Save the updated BookCopy with the PDF URL
             }
@@ -68,7 +68,8 @@ public class BookCopyServiceImpl implements BookCopyService {
         } catch (Exception e) {
             logger.error("Error creating book copy: ", e);
             throw new BookCreationException("Failed to create book copy.");
-        }}
+        }
+    }
 
     @Override
     public BookCopy getBookCopyById(Long id) {
@@ -83,9 +84,8 @@ public class BookCopyServiceImpl implements BookCopyService {
 
     @Override
     public BookCopy updateBookCopy(Long id, UpdatedBookCopyRequest updatedBookCopyRequest) {
-        BookCopy existingBookCopy = getBookCopyById(id);  // Retrieve existing book copy
+        BookCopy existingBookCopy = getBookCopyById(id);
 
-        // Update each field only if the new value is not null
         if (updatedBookCopyRequest.getPrice() != null) {
             existingBookCopy.setPrice(updatedBookCopyRequest.getPrice());
         }
@@ -99,22 +99,32 @@ public class BookCopyServiceImpl implements BookCopyService {
         }
 
         if (updatedBookCopyRequest.getFullPdf() != null && !updatedBookCopyRequest.getFullPdf().isEmpty()) {
-            String newFullPdfUrl = cloudinaryService.uploadFile(updatedBookCopyRequest.getFullPdf(), id);
-            existingBookCopy.setFullPdf(newFullPdfUrl);  // Update full PDF URL only if a new file is provided
+            if (existingBookCopy.getFullPdf() != null) {
+                String oldPdfKey = s3Service.extractKeyFromUrl(existingBookCopy.getFullPdf());
+                s3Service.deleteFile(oldPdfKey);
+            }
+            String newFullPdfUrl = s3Service.uploadFile(updatedBookCopyRequest.getFullPdf(), "books/" + id + "/fullPdf.pdf");
+            existingBookCopy.setFullPdf(newFullPdfUrl);
         }
 
-        // Save and return the updated BookCopy
         return bookCopyRepository.save(existingBookCopy);
     }
 
 
     @Override
     public void deleteBookCopy(Long id) {
-        if (!bookCopyRepository.existsById(id)) {
-            throw new BookCopyNotFoundException("BookCopy with ID " + id + " not found.");
+        BookCopy bookCopy = bookCopyRepository.findById(id)
+                .orElseThrow(() -> new BookCopyNotFoundException("BookCopy with ID " + id + " not found."));
+
+        // Delete the full PDF from S3 if it exists
+        if (bookCopy.getFullPdf() != null) {
+            String pdfKey = s3Service.extractKeyFromUrl(bookCopy.getFullPdf());
+            s3Service.deleteFile(pdfKey);
         }
+
         bookCopyRepository.deleteById(id);
     }
+
 
     @Override
     public List<BookCopy> searchBookCopies(

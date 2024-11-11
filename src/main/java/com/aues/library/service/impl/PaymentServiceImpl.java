@@ -31,17 +31,19 @@ public class PaymentServiceImpl implements PaymentService {
     private final PayPalService payPalService;
     private final CurrencyConversionService currencyConversionService;
     private static final Logger logger = LoggerFactory.getLogger(BookController.class);
+    private final S3Service s3Service;
 
     @Autowired
     public PaymentServiceImpl(PaymentRepository paymentRepository, OrderRepository orderRepository,
                               PayPalService payPalService, CloudinaryService cloudinaryService,
-                              EmailService emailService, CurrencyConversionService currencyConversionService) {
+                              EmailService emailService, CurrencyConversionService currencyConversionService, S3Service s3Service) {
         this.paymentRepository = paymentRepository;
         this.orderRepository = orderRepository;
         this.payPalService = payPalService;
         this.cloudinaryService = cloudinaryService;
         this.emailService = emailService;
         this.currencyConversionService = currencyConversionService;
+        this.s3Service = s3Service;
     }
 
     @Override
@@ -52,6 +54,8 @@ public class PaymentServiceImpl implements PaymentService {
 
         BigDecimal amountInKZT = order.getTotalAmount();
         BigDecimal amountInUSD = currencyConversionService.convertToUSD(amountInKZT);
+
+
 
         String cancelUrl = "http://localhost:5173/payment/failure";
         String successUrl = "http://localhost:5173/payment/success";
@@ -88,13 +92,6 @@ public class PaymentServiceImpl implements PaymentService {
             paymentRecord.setPaymentStatus("PENDING");
             paymentRepository.save(paymentRecord);
 
-            // Отправляем ссылку для завершения оплаты на email пользователя
-            emailService.sendEmail(
-                    userEmail,
-                    "Оплата заказа",
-                    "Перейдите по ссылке для завершения оплаты: " + approvalUrl
-            );
-
             // Возвращаем approvalUrl на фронтенд
             Map<String, String> response = new HashMap<>();
             response.put("approvalUrl", approvalUrl);  // Убедитесь, что это именно approvalUrl
@@ -110,7 +107,6 @@ public class PaymentServiceImpl implements PaymentService {
     @Transactional
     public void handlePaymentNotification(String paymentId, String payerId) {
         try {
-            // Execute payment using PayPal service
             com.paypal.api.payments.Payment payPalPayment = payPalService.executePayment(paymentId, payerId);
             com.aues.library.model.Payment paymentRecord = paymentRepository.findByTransactionId(paymentId)
                     .orElseThrow(() -> new PaymentNotFoundException("Payment with transaction ID " + paymentId + " not found"));
@@ -121,33 +117,20 @@ public class PaymentServiceImpl implements PaymentService {
                 paymentRecord.setPaymentStatus("PAID");
                 paymentRepository.save(paymentRecord);
 
-                // Download PDFs for each book copy using Cloudinary metadata
-                List<byte[]> pdfs = paymentRecord.getOrder().getCartItems().stream()
-                        .map(cartItem -> {
-                            String fullPdfUrl = cartItem.getBookCopy().getFullPdf();
-                            try {
-                                byte[] pdfData = cloudinaryService.downloadFileByUrl(fullPdfUrl);
-                                if (pdfData == null || pdfData.length == 0) {
-                                    logger.warn("Downloaded PDF is empty for BookCopy ID: {}", fullPdfUrl);
-                                    return null;  // Skip empty files
-                                }
-                                return pdfData;
-                            } catch (Exception e) {
-                                logger.error("Failed to download file for BookCopy ID: {}", fullPdfUrl, e);
-                                return null;  // Skip files with download issues
-                            }
-                        })
-                        .filter(Objects::nonNull)  // Remove any null entries
+                // Collect S3 keys for each book copy's PDF
+                List<String> s3Keys = paymentRecord.getOrder().getCartItems().stream()
+                        .map(cartItem -> cartItem.getBookCopy().getFullPdf())  // Assumes fullPdf contains the S3 key
+                        .filter(key -> key != null && !key.isEmpty())
                         .collect(Collectors.toList());
 
-                // Send email with attachments if PDFs are available
-                if (!pdfs.isEmpty()) {
+                // Send email with attachments if S3 keys are available
+                if (!s3Keys.isEmpty()) {
                     try {
-                        emailService.sendEmailWithMultiplePdfAttachments(
+                        emailService.sendEmailWithAttachmentsFromS3(
                                 paymentRecord.getOrder().getUser().getEmail(),
                                 "Your Purchased Books",
                                 "Thank you for your purchase! Please find attached the full PDFs of the books you bought.",
-                                pdfs,
+                                s3Keys,
                                 "BookPurchase"
                         );
                         logger.info("Email with attachments sent successfully to {}", paymentRecord.getOrder().getUser().getEmail());
@@ -166,6 +149,8 @@ public class PaymentServiceImpl implements PaymentService {
             throw new PaymentProcessingException("Error completing PayPal payment", e);
         }
     }
+
+
 
 
     @Override

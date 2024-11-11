@@ -1,5 +1,6 @@
 package com.aues.library.service;
 
+import com.aues.library.service.impl.S3Service;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,6 +12,9 @@ import org.springframework.stereotype.Service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -22,61 +26,50 @@ public class EmailService {
 
     @Autowired
     private JavaMailSender mailSender;
+    @Autowired
+    private S3Service s3Service;
+
+
 
     /**
      * Sends a simple email with plain text.
      */
+    // Отправка email без вложений
     public void sendEmail(String to, String subject, String text) {
-        sendEmailWithOptionalAttachments(to, subject, text, false, null);
+        sendEmailWithAttachmentsFromS3(to, subject, text, Collections.emptyList(), "Attachment");
     }
 
-    /**
-     * Sends an email with HTML support and optional attachments.
-     */
-    public void sendEmailWithOptionalAttachments(String to, String subject, String text, boolean isHtml,
-                                                 Map<String, InputStreamSource> attachments) {
+    public void sendEmailWithAttachmentsFromS3(String to, String subject, String text, List<String> s3Keys, String baseName) {
         try {
             MimeMessage message = mailSender.createMimeMessage();
-            MimeMessageHelper helper = new MimeMessageHelper(message, attachments != null && !attachments.isEmpty());
-
+            MimeMessageHelper helper = new MimeMessageHelper(message, true);
             helper.setTo(to);
             helper.setSubject(subject);
-            helper.setText(text, isHtml);
+            helper.setText(text);
 
-            if (attachments != null) {
-                attachments.forEach((name, source) -> {
-                    try {
-                        helper.addAttachment(name, source);
-                    } catch (MessagingException e) {
-                        logger.error("Failed to add attachment: {}", name, e);
+            if (s3Keys != null && !s3Keys.isEmpty()) {
+                int index = 1;
+                for (String key : s3Keys) {
+                    System.out.println("Attempting to download file with S3 key: " + key);
+
+                    // Download file from S3
+                    byte[] fileData = s3Service.downloadFile(key);
+                    if (fileData != null && fileData.length > 0) {
+                        helper.addAttachment(baseName + index + ".pdf", new ByteArrayResource(fileData));
+                        index++;
+                    } else {
+
+                        logger.warn("File data is null or empty for key: {}", key);
                     }
-                });
+                }
             }
 
             mailSender.send(message);
-            logger.info("Email sent to {}", to);
+            logger.info("Email with attachments sent successfully to {}", to);
         } catch (MessagingException e) {
-            logger.error("Failed to send email to {}", to, e);
-            throw new RuntimeException("Failed to send email", e);
+            throw new RuntimeException("Failed to send email with attachments", e);
         }
     }
 
-    /**
-     * Sends an email with multiple PDF attachments.
-     */
-    public void sendEmailWithMultiplePdfAttachments(String to, String subject, String text, List<byte[]> pdfDataList,
-                                                    String basePdfName) {
-        Map<String, InputStreamSource> pdfAttachments = createPdfAttachments(pdfDataList, basePdfName);
-        sendEmailWithOptionalAttachments(to, subject, text, false, pdfAttachments);
-    }
 
-    /**
-     * Helper method to create PDF attachments from byte data.
-     */
-    private Map<String, InputStreamSource> createPdfAttachments(List<byte[]> pdfDataList, String basePdfName) {
-        return pdfDataList.stream().collect(Collectors.toMap(
-                data -> basePdfName + (pdfDataList.indexOf(data) + 1) + ".pdf",
-                ByteArrayResource::new
-        ));
-    }
 }
