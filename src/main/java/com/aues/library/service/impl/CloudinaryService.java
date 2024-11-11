@@ -1,10 +1,6 @@
 package com.aues.library.service.impl;
 
 import com.aues.library.controller.BookController;
-import com.aues.library.exceptions.BookNotFoundException;
-import com.aues.library.model.Book;
-import com.aues.library.model.BookCopy;
-import com.aues.library.model.FileMetadata;
 import com.aues.library.repository.BookCopyRepository;
 import com.aues.library.repository.BookRepository;
 import com.aues.library.repository.FileMetadataRepository;
@@ -48,74 +44,6 @@ public class CloudinaryService {
                 "api_secret", apiSecret));
     }
 
-    public String uploadFile(MultipartFile file, Long bookCopyId) {
-        if (file == null || file.isEmpty()) {
-            logger.warn("No file provided for upload");
-            return null;
-        }
-        try {
-            Map<?, ?> uploadResult = cloudinary.uploader().upload(file.getBytes(), ObjectUtils.emptyMap());
-
-            FileMetadata metadata = new FileMetadata();
-            metadata.setPublicId(uploadResult.get("public_id").toString());
-            metadata.setResourceType(uploadResult.get("resource_type").toString());
-            metadata.setUrl(uploadResult.get("url").toString());
-
-            BookCopy bookCopy = bookCopyRepository.findById(bookCopyId)
-                    .orElseThrow(() -> new BookNotFoundException("Book copy not found"));
-            metadata.setBookCopy(bookCopy);
-
-            fileMetadataRepository.save(metadata);
-
-            return metadata.getUrl();
-        } catch (IOException e) {
-            logger.error("Failed to upload file to Cloudinary", e);
-            throw new RuntimeException("Failed to upload file", e);
-        }
-    }
-
-    public byte[] downloadFileByBookCopy(Long bookCopyId) throws FileNotFoundException {
-        List<FileMetadata> files = fileMetadataRepository.findByBookCopy_Id(bookCopyId);
-
-        if (files.isEmpty()) {
-            logger.warn("No FileMetadata found for BookCopy ID: {}", bookCopyId);
-            throw new FileNotFoundException("No files found for this book copy");
-        }
-
-        FileMetadata fileMetadata = files.get(0);  // Adjust if you want to handle multiple files
-        String fileUrl = fileMetadata.getUrl();
-
-        logger.info("Attempting to download file from URL: {}", fileUrl);
-
-        byte[] fileData = downloadFile(fileUrl);
-        if (fileData == null || fileData.length == 0) {
-            logger.warn("Downloaded file is empty for URL: {}", fileUrl);
-        }
-        return fileData;
-    }
-
-
-    private byte[] downloadFile(String fileUrl) {
-        try {
-            URL url = new URL(fileUrl);
-            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-            connection.setRequestMethod("GET");
-
-            if (connection.getResponseCode() == HttpURLConnection.HTTP_OK) {
-                try (InputStream inputStream = connection.getInputStream()) {
-                    byte[] fileData = inputStream.readAllBytes();
-                    logger.info("Downloaded file size: {} bytes", fileData.length);
-                    return fileData;
-                }
-            } else {
-                logger.error("Failed to download file from Cloudinary. Response code: {}", connection.getResponseCode());
-                throw new RuntimeException("Failed to download file with status code: " + connection.getResponseCode());
-            }
-        } catch (IOException e) {
-            logger.error("Failed to download file from Cloudinary: {}", fileUrl, e);
-            throw new RuntimeException("Failed to download file", e);
-        }
-    }
 
     // Upload a file for a book and return its URL
     public String uploadFileForBook(MultipartFile file) {
@@ -151,27 +79,5 @@ public class CloudinaryService {
         return parts[parts.length - 1].split("\\.")[0];
     }
 
-    // Download a file by its URL
-    public byte[] downloadFileByUrl(String fileUrl) {
-        try {
-            URL url = new URL(fileUrl);
-            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-            connection.setRequestMethod("GET");
-
-            if (connection.getResponseCode() == HttpURLConnection.HTTP_OK) {
-                try (InputStream inputStream = connection.getInputStream()) {
-                    byte[] fileData = inputStream.readAllBytes();
-                    logger.info("Downloaded file size: {} bytes", fileData.length);
-                    return fileData;
-                }
-            } else {
-                logger.error("Failed to download file from Cloudinary. Response code: {}", connection.getResponseCode());
-                throw new RuntimeException("Failed to download file with status code: " + connection.getResponseCode());
-            }
-        } catch (IOException e) {
-            logger.error("Failed to download file from Cloudinary: {}", fileUrl, e);
-            throw new RuntimeException("Failed to download file", e);
-        }
-    }
 }
 

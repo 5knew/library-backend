@@ -1,7 +1,6 @@
 package com.aues.library.service.impl;
 
 import com.aues.library.controller.BookController;
-import com.aues.library.exceptions.BookNotFoundException;
 import com.aues.library.exceptions.PaymentNotFoundException;
 import com.aues.library.exceptions.PaymentProcessingException;
 import com.aues.library.model.Order;
@@ -16,7 +15,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import java.math.BigDecimal;
 import java.util.*;
 import java.util.stream.Collectors;
