@@ -48,16 +48,16 @@ public class PaymentController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error processing payment notification: " + e.getMessage());
         }
     }
-
-    @PostMapping
-    public ResponseEntity<Payment> createPayment(@RequestParam Long orderId, @RequestBody Payment payment) {
-        try {
-            Payment createdPayment = paymentService.createPayment(orderId, payment);
-            return new ResponseEntity<>(createdPayment, HttpStatus.CREATED);
-        } catch (PaymentProcessingException e) {
-            return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
-        }
-    }
+//
+//    @PostMapping
+//    public ResponseEntity<Payment> createPayment(@RequestParam Long orderId, @RequestBody Payment payment) {
+//        try {
+//            Payment createdPayment = paymentService.createPayment(orderId, payment);
+//            return new ResponseEntity<>(createdPayment, HttpStatus.CREATED);
+//        } catch (PaymentProcessingException e) {
+//            return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
+//        }
+//    }
 
     @GetMapping("/{id}")
     public ResponseEntity<Payment> getPaymentById(@PathVariable Long id) {

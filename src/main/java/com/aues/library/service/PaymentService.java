@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Map;
 
 public interface PaymentService {
-    Payment createPayment(Long orderId, Payment payment);
+//    Payment createPayment(Long orderId, Payment payment);
     Payment getPaymentById(Long id);
     Payment getPaymentByTransactionId(String transactionId);
     Payment getPaymentByOrderId(Long orderId);

@@ -29,7 +29,5 @@ public class BookCopy {
     private String language;
     private String fullPdf;
 
-    @OneToMany(mappedBy = "bookCopy", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<FileMetadata> files;
 }
 

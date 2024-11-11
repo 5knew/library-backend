@@ -3,7 +3,6 @@ package com.aues.library.service.impl;
 import com.aues.library.controller.BookController;
 import com.aues.library.repository.BookCopyRepository;
 import com.aues.library.repository.BookRepository;
-import com.aues.library.repository.FileMetadataRepository;
 import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
 import org.slf4j.Logger;
@@ -12,12 +11,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStream;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.util.List;
 import java.util.Map;
 
 @Service
@@ -27,17 +21,15 @@ public class CloudinaryService {
     private static final Logger logger = LoggerFactory.getLogger(BookController.class);
     private final BookRepository bookRepository;
     private final BookCopyRepository bookCopyRepository;
-    private final FileMetadataRepository fileMetadataRepository;
 
     public CloudinaryService(@Value("${cloudinary.cloud_name}") String cloudName,
                              @Value("${cloudinary.api_key}") String apiKey,
                              @Value("${cloudinary.api_secret}") String apiSecret,
                              BookRepository bookRepository,
-                             BookCopyRepository bookCopyRepository,
-                             FileMetadataRepository fileMetadataRepository) {
+                             BookCopyRepository bookCopyRepository
+                             ) {
         this.bookRepository = bookRepository;
         this.bookCopyRepository = bookCopyRepository;
-        this.fileMetadataRepository = fileMetadataRepository;
         this.cloudinary = new Cloudinary(ObjectUtils.asMap(
                 "cloud_name", cloudName,
                 "api_key", apiKey,

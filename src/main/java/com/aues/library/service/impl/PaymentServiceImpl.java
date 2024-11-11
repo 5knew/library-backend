@@ -85,7 +85,7 @@ public class PaymentServiceImpl implements PaymentService {
             com.aues.library.model.Payment paymentRecord = new com.aues.library.model.Payment();
             paymentRecord.setOrder(order);
             paymentRecord.setPaymentDate(new Date());
-            paymentRecord.setAmount(amountInUSD);
+            paymentRecord.setAmount(amountInKZT);
             paymentRecord.setTransactionId(payPalPayment.getId());
             paymentRecord.setPaymentStatus("PENDING");
             paymentRepository.save(paymentRecord);
@@ -151,16 +151,16 @@ public class PaymentServiceImpl implements PaymentService {
 
 
 
-    @Override
-    @Transactional
-    public Payment createPayment(Long orderId, Payment payment) {
-        Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new PaymentProcessingException("Order with ID " + orderId + " not found"));
-
-        payment.setOrder(order);
-        payment.setPaymentDate(new Date());
-        return paymentRepository.save(payment);
-    }
+//    @Override
+//    @Transactional
+//    public Payment createPayment(Long orderId, Payment payment) {
+//        Order order = orderRepository.findById(orderId)
+//                .orElseThrow(() -> new PaymentProcessingException("Order with ID " + orderId + " not found"));
+//
+//        payment.setOrder(order);
+//        payment.setPaymentDate(new Date());
+//        return paymentRepository.save(payment);
+//    }
 
     @Override
     public Payment getPaymentById(Long id) {
