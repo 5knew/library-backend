@@ -7,6 +7,7 @@ import com.aues.library.service.CartItemService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -25,10 +26,11 @@ public class CartItemController {
     }
 
     @PostMapping
-    public ResponseEntity<CartItem> createCartItem(@RequestBody CartItemRequest cartItemRequest) {
+    public ResponseEntity<CartItem> createCartItem(@Validated @RequestBody CartItemRequest cartItemRequest) {
         CartItem createdCartItem = cartItemService.createCartItem(cartItemRequest);
         return new ResponseEntity<>(createdCartItem, HttpStatus.CREATED);
     }
+
 
     @GetMapping("/{id}")
     public ResponseEntity<CartItem> getCartItemById(@PathVariable Long id) {
@@ -52,15 +54,15 @@ public class CartItemController {
     }
 
 
-    @PutMapping("/{id}")
-    public ResponseEntity<CartItem> updateCartItem(@PathVariable Long id, @RequestBody CartItem updatedCartItem) {
-        try {
-            CartItem cartItem = cartItemService.updateCartItem(id, updatedCartItem);
-            return new ResponseEntity<>(cartItem, HttpStatus.OK);
-        } catch (CartItemNotFoundException e) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        }
-    }
+//    @PutMapping("/{id}")
+//    public ResponseEntity<CartItem> updateCartItem(@PathVariable Long id, @RequestBody CartItem updatedCartItem) {
+//        try {
+//            CartItem cartItem = cartItemService.updateCartItem(id, updatedCartItem);
+//            return new ResponseEntity<>(cartItem, HttpStatus.OK);
+//        } catch (CartItemNotFoundException e) {
+//            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+//        }
+//    }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<HttpStatus> deleteCartItem(@PathVariable Long id) {

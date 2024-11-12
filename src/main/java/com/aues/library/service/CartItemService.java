@@ -10,7 +10,7 @@ public interface CartItemService {
     CartItem createCartItem(CartItemRequest cartItemRequest);
     CartItem getCartItemById(Long id);
     List<CartItem> getAllCartItems();
-    CartItem updateCartItem(Long id, CartItem updatedCartItem);
+//    CartItem updateCartItem(Long id, CartItem updatedCartItem);
     void deleteCartItem(Long id);
     List<CartItem> searchCartItems(Optional<Long> userId, Optional<Long> bookCopyId);
 }
