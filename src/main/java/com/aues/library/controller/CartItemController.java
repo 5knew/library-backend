@@ -41,6 +41,11 @@ public class CartItemController {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
     }
+    @GetMapping("/order/{orderId}")
+    public ResponseEntity<List<CartItem>> getCartItemsByOrderId(@PathVariable Long orderId) {
+        List<CartItem> cartItems = cartItemService.getCartItemsByOrderId(orderId);
+        return cartItems.isEmpty() ? new ResponseEntity<>(HttpStatus.NO_CONTENT) : new ResponseEntity<>(cartItems, HttpStatus.OK);
+    }
 
     @GetMapping
     public ResponseEntity<List<CartItem>> getAllCartItems() {

@@ -15,4 +15,5 @@ public interface CartItemRepository extends JpaRepository<CartItem, Long>, JpaSp
 //    List<CartItem> findAll();
     List<CartItem> findByOrderIsNull();
     boolean existsByUserIdAndBookCopyId(Long userId, Long bookCopyId);
+    List<CartItem> findByOrderId(Long orderId);
 }

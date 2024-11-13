@@ -32,6 +32,7 @@ public class Order {
     private Date orderDate;
 
     @OneToOne(mappedBy = "order")
+    @JsonManagedReference
     private Payment payment;
 
     private BigDecimal totalAmount;

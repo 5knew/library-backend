@@ -119,7 +119,12 @@ public List<CartItem> searchCartItems(Optional<Long> userId, Optional<Long> book
     return cartItemRepository.findAll(spec);
 }
 
-private Specification<CartItem> userIdEqualsAndOrderIsNull(Long userId) {
+    @Override
+    public List<CartItem> getCartItemsByOrderId(Long orderId) {
+        return cartItemRepository.findByOrderId(orderId);
+    }
+
+    private Specification<CartItem> userIdEqualsAndOrderIsNull(Long userId) {
         return (root, query, criteriaBuilder) -> criteriaBuilder.and(
                 criteriaBuilder.equal(root.get("user").get("id"), userId),
                 criteriaBuilder.isNull(root.get("order"))

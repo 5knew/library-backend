@@ -13,4 +13,5 @@ public interface CartItemService {
 //    CartItem updateCartItem(Long id, CartItem updatedCartItem);
     void deleteCartItem(Long id);
     List<CartItem> searchCartItems(Optional<Long> userId, Optional<Long> bookCopyId);
+    List<CartItem> getCartItemsByOrderId(Long orderId);
 }
