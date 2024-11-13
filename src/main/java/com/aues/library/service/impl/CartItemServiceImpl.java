@@ -68,7 +68,7 @@ public CartItem getCartItemById(Long id) {
 
 @Override
 public List<CartItem> getAllCartItems() {
-    return cartItemRepository.findAll();
+    return cartItemRepository.findByOrderIsNull();
 }
 
 //    @Override
@@ -113,16 +113,18 @@ public void deleteCartItem(Long id) {
 @Override
 public List<CartItem> searchCartItems(Optional<Long> userId, Optional<Long> bookCopyId) {
     Specification<CartItem> spec = Specification.where(
-                    userId.map(this::userIdEquals).orElse(null))
+                    userId.map(this::userIdEqualsAndOrderIsNull).orElse(null))
             .and(bookCopyId.map(this::bookCopyIdEquals).orElse(null));
 
     return cartItemRepository.findAll(spec);
 }
 
-private Specification<CartItem> userIdEquals(Long userId) {
-    return (root, query, criteriaBuilder) ->
-            criteriaBuilder.equal(root.get("user").get("id"), userId);
-}
+private Specification<CartItem> userIdEqualsAndOrderIsNull(Long userId) {
+        return (root, query, criteriaBuilder) -> criteriaBuilder.and(
+                criteriaBuilder.equal(root.get("user").get("id"), userId),
+                criteriaBuilder.isNull(root.get("order"))
+        );
+    }
 
 private Specification<CartItem> bookCopyIdEquals(Long bookCopyId) {
     return (root, query, criteriaBuilder) ->

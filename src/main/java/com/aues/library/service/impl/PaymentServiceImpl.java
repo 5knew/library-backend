@@ -8,6 +8,7 @@ import com.aues.library.model.Payment;
 import com.aues.library.repository.OrderRepository;
 import com.aues.library.repository.PaymentRepository;
 import com.aues.library.service.EmailService;
+import com.aues.library.service.OrderService;
 import com.aues.library.service.PaymentService;
 import com.paypal.base.rest.PayPalRESTException;
 import org.slf4j.Logger;
@@ -30,11 +31,12 @@ public class PaymentServiceImpl implements PaymentService {
     private final CurrencyConversionService currencyConversionService;
     private static final Logger logger = LoggerFactory.getLogger(BookController.class);
     private final S3Service s3Service;
+    private final OrderService orderService;
 
     @Autowired
     public PaymentServiceImpl(PaymentRepository paymentRepository, OrderRepository orderRepository,
                               PayPalService payPalService, CloudinaryService cloudinaryService,
-                              EmailService emailService, CurrencyConversionService currencyConversionService, S3Service s3Service) {
+                              EmailService emailService, CurrencyConversionService currencyConversionService, S3Service s3Service, OrderService orderService) {
         this.paymentRepository = paymentRepository;
         this.orderRepository = orderRepository;
         this.payPalService = payPalService;
@@ -42,13 +44,15 @@ public class PaymentServiceImpl implements PaymentService {
         this.emailService = emailService;
         this.currencyConversionService = currencyConversionService;
         this.s3Service = s3Service;
+        this.orderService = orderService;
     }
 
     @Override
     @Transactional
-    public Map<String, String> processPayment(Long orderId, String userEmail) {
-        Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new PaymentNotFoundException("Order not found with ID: " + orderId));
+    public Map<String, String> processPayment(String userEmail, Long userId, List<Long> cartItemIds) {
+          Order order = orderService.createOrder(userId, cartItemIds);
+//        Order order = orderRepository.findById(orderId)
+//                .orElseThrow(() -> new PaymentNotFoundException("Order not found with ID: " + orderId));
 
         BigDecimal amountInKZT = order.getTotalAmount();
         BigDecimal amountInUSD = currencyConversionService.convertToUSD(amountInKZT);
@@ -65,7 +69,7 @@ public class PaymentServiceImpl implements PaymentService {
                     "USD",
                     "paypal",
                     "sale",
-                    "Payment for Order " + orderId,
+                    "Payment for Order " + order.getId(),
                     cancelUrl,
                     successUrl
             );
@@ -151,16 +155,16 @@ public class PaymentServiceImpl implements PaymentService {
 
 
 
-//    @Override
-//    @Transactional
-//    public Payment createPayment(Long orderId, Payment payment) {
-//        Order order = orderRepository.findById(orderId)
-//                .orElseThrow(() -> new PaymentProcessingException("Order with ID " + orderId + " not found"));
-//
-//        payment.setOrder(order);
-//        payment.setPaymentDate(new Date());
-//        return paymentRepository.save(payment);
-//    }
+    @Override
+    @Transactional
+    public Payment createPayment(Long orderId, Payment payment) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new PaymentProcessingException("Order with ID " + orderId + " not found"));
+
+        payment.setOrder(order);
+        payment.setPaymentDate(new Date());
+        return paymentRepository.save(payment);
+    }
 
     @Override
     public Payment getPaymentById(Long id) {

@@ -26,9 +26,10 @@ public class PaymentController {
 
     // Process the main payment flow
     @PostMapping("/process")
-    public ResponseEntity<?> processPayment(@RequestParam Long orderId, @RequestParam String userEmail) {
+    public ResponseEntity<?> processPayment(@RequestParam String userEmail,
+                                            @RequestParam Long userId, @RequestBody List<Long> cartItemIds) {
         try {
-            Map<String, String> response = paymentService.processPayment(orderId, userEmail);
+            Map<String, String> response = paymentService.processPayment(userEmail, userId, cartItemIds);
             return new ResponseEntity<>(response, HttpStatus.CREATED); // Возвращаем JSON с approvalUrl
         } catch (PaymentProcessingException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Payment processing error: " + e.getMessage());
@@ -48,16 +49,16 @@ public class PaymentController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Error processing payment notification: " + e.getMessage());
         }
     }
-//
-//    @PostMapping
-//    public ResponseEntity<Payment> createPayment(@RequestParam Long orderId, @RequestBody Payment payment) {
-//        try {
-//            Payment createdPayment = paymentService.createPayment(orderId, payment);
-//            return new ResponseEntity<>(createdPayment, HttpStatus.CREATED);
-//        } catch (PaymentProcessingException e) {
-//            return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
-//        }
-//    }
+
+    @PostMapping
+    public ResponseEntity<Payment> createPayment(@RequestParam Long orderId, @RequestBody Payment payment) {
+        try {
+            Payment createdPayment = paymentService.createPayment(orderId, payment);
+            return new ResponseEntity<>(createdPayment, HttpStatus.CREATED);
+        } catch (PaymentProcessingException e) {
+            return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
+        }
+    }
 
     @GetMapping("/{id}")
     public ResponseEntity<Payment> getPaymentById(@PathVariable Long id) {
