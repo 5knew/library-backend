@@ -10,7 +10,8 @@ public interface OrderService {
     Order createOrder(Long userId, List<Long> cartItemIds);
     Order getOrderById(Long id);
     Page<Order> getAllOrders(Pageable pageable);
-    List<Order> getOrdersByUserId(Long userId);
+    Page<Order> getOrdersByUserId(Long userId, Pageable pageable);
     Order updateOrder(Long id, Order updatedOrder);
     void deleteOrder(Long id);
+    boolean cancelOrder(Long orderId);
 }

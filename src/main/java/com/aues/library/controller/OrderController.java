@@ -61,9 +61,17 @@ public class OrderController {
     }
 
     @GetMapping("/user/{userId}")
-    public ResponseEntity<List<Order>> getOrdersByUserId(@PathVariable Long userId) {
-        List<Order> orders = orderService.getOrdersByUserId(userId);
-        return orders.isEmpty() ? new ResponseEntity<>(HttpStatus.NO_CONTENT) : new ResponseEntity<>(orders, HttpStatus.OK);
+    public ResponseEntity<Page<Order>> getOrdersByUserId(
+            @PathVariable Long userId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Order> ordersPage = orderService.getOrdersByUserId(userId, pageable);
+
+        return ordersPage.isEmpty() ?
+                new ResponseEntity<>(HttpStatus.NO_CONTENT) :
+                new ResponseEntity<>(ordersPage, HttpStatus.OK);
     }
 
     @PutMapping("/{id}")
@@ -83,6 +91,20 @@ public class OrderController {
             return new ResponseEntity<>(HttpStatus.NO_CONTENT);
         } catch (OrderNotFoundException e) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
+    }
+
+    @PutMapping("/{orderId}/cancel")
+    public ResponseEntity<String> cancelOrder(@PathVariable Long orderId) {
+        try {
+            boolean isCanceled = orderService.cancelOrder(orderId);
+            if (isCanceled) {
+                return new ResponseEntity<>("Order canceled successfully.", HttpStatus.OK);
+            } else {
+                return new ResponseEntity<>("Order cannot be canceled.", HttpStatus.BAD_REQUEST);
+            }
+        } catch (Exception e) {
+            return new ResponseEntity<>("Error canceling order: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 }

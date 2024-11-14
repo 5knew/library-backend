@@ -4,11 +4,14 @@ import com.aues.library.exceptions.OrderCreationException;
 import com.aues.library.exceptions.OrderNotFoundException;
 import com.aues.library.model.CartItem;
 import com.aues.library.model.Order;
+import com.aues.library.model.Payment;
 import com.aues.library.model.User;
 import com.aues.library.repository.CartItemRepository;
 import com.aues.library.repository.OrderRepository;
+import com.aues.library.repository.PaymentRepository;
 import com.aues.library.repository.UserRepository;
 import com.aues.library.service.OrderService;
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -18,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -26,12 +30,14 @@ public class OrderServiceImpl implements OrderService {
     private final OrderRepository orderRepository;
     private final UserRepository userRepository;
     private final CartItemRepository cartItemRepository;
+    private final PaymentRepository paymentRepository;
 
     @Autowired
-    public OrderServiceImpl(OrderRepository orderRepository, UserRepository userRepository, CartItemRepository cartItemRepository) {
+    public OrderServiceImpl(OrderRepository orderRepository, UserRepository userRepository, CartItemRepository cartItemRepository, PaymentRepository paymentRepository) {
         this.orderRepository = orderRepository;
         this.userRepository = userRepository;
         this.cartItemRepository = cartItemRepository;
+        this.paymentRepository = paymentRepository;
     }
 
     @Override
@@ -83,8 +89,8 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public List<Order> getOrdersByUserId(Long userId) {
-        return orderRepository.findByUserId(userId);
+    public Page<Order> getOrdersByUserId(Long userId, Pageable pageable) {
+        return orderRepository.findByUserId(userId, pageable);
     }
 
     @Override
@@ -107,5 +113,24 @@ public class OrderServiceImpl implements OrderService {
             throw new OrderNotFoundException("Order with ID " + id + " not found");
         }
         orderRepository.deleteById(id);
+    }
+
+    @Override
+    @Transactional
+    public boolean cancelOrder(Long orderId) {
+        Optional<Order> orderOptional = orderRepository.findById(orderId);
+        if (orderOptional.isPresent()) {
+            Order order = orderOptional.get();
+            Payment payment = paymentRepository.findByOrderId(orderId)
+                    .orElseThrow(() -> new EntityNotFoundException("Payment not found for Order ID: " + orderId));
+
+            // Check if the payment status is PENDING before canceling
+            if ("PENDING".equalsIgnoreCase(payment.getPaymentStatus())) {
+                payment.setPaymentStatus("CANCELED");
+                paymentRepository.save(payment);
+                return true;
+            }
+        }
+        return false;
     }
 }

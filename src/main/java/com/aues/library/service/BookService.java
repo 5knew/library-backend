@@ -1,6 +1,8 @@
 package com.aues.library.service;
 
 import com.aues.library.model.Book;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
@@ -16,7 +18,7 @@ public interface BookService {
     Book getBookById(Long id);
 
     // Получение всех книг
-    List<Book> getAllBooks();
+    Page<Book> getAllBooks(Pageable pageable);
 
     // Обновление существующей книги
     Book updateBook(Long bookId, MultipartFile fullPdfFile, MultipartFile previewPdfFile, MultipartFile imageFile,
