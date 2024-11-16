@@ -5,6 +5,8 @@ import com.aues.library.dto.UpdatedBookCopyRequest;
 import com.aues.library.model.BookCopy;
 import com.aues.library.service.BookCopyService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -90,6 +92,19 @@ public class BookCopyController {
     public ResponseEntity<List<BookCopy>> getBookCopiesByBookId(@PathVariable Long bookId) {
         List<BookCopy> bookCopies = bookCopyService.getBookCopiesByBookId(bookId);
         return new ResponseEntity<>(bookCopies, HttpStatus.OK);
+    }
+
+
+    @GetMapping("/filter")
+    public Page<BookCopy> filterBookCopies(
+            @RequestParam(required = false) BigDecimal minPrice,
+            @RequestParam(required = false) BigDecimal maxPrice,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) Date startDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) Date endDate,
+            @RequestParam(required = false) String language,
+            @RequestParam(required = false) Long bookCopyId,
+            Pageable pageable) {
+        return bookCopyService.getFilteredBookCopies(minPrice, maxPrice, startDate, endDate, language, bookCopyId, pageable);
     }
 
 

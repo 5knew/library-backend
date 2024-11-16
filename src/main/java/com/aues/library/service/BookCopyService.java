@@ -3,6 +3,8 @@ package com.aues.library.service;
 import com.aues.library.dto.BookCopyRequest;
 import com.aues.library.dto.UpdatedBookCopyRequest;
 import com.aues.library.model.BookCopy;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.math.BigDecimal;
 import java.util.Date;
@@ -25,4 +27,9 @@ public interface BookCopyService {
             Optional<Date> startDate, Optional<Date> endDate);
 
     List<BookCopy> getBookCopiesByBookId(Long bookId);
+    Page<BookCopy> getFilteredBookCopies(BigDecimal minPrice, BigDecimal maxPrice,
+                                         Date startDate, Date endDate,
+                                         String language, Long bookCopyId,
+                                         Pageable pageable);
+
 }

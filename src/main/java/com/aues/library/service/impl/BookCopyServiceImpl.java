@@ -13,6 +13,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
@@ -70,6 +72,55 @@ public class BookCopyServiceImpl implements BookCopyService {
             throw new BookCreationException("Failed to create book copy.");
         }
     }
+
+    public Page<BookCopy> getFilteredBookCopies(BigDecimal minPrice, BigDecimal maxPrice,
+                                                Date startDate, Date endDate,
+                                                String language, Long bookCopyId,
+                                                Pageable pageable) {
+        Specification<BookCopy> spec = Specification.where(null);
+
+        // Filter by bookCopyId if provided
+        if (bookCopyId != null) {
+            spec = spec.and((root, query, cb) -> cb.equal(root.get("id"), bookCopyId));
+        }
+
+        // Filter by price range if provided
+        if (minPrice != null || maxPrice != null) {
+            spec = spec.and((root, query, cb) -> {
+                if (minPrice != null && maxPrice != null) {
+                    return cb.between(root.get("price"), minPrice, maxPrice);
+                } else if (minPrice != null) {
+                    return cb.greaterThanOrEqualTo(root.get("price"), minPrice);
+                } else {
+                    return cb.lessThanOrEqualTo(root.get("price"), maxPrice);
+                }
+            });
+        }
+
+        // Filter by publication date range if provided
+        if (startDate != null || endDate != null) {
+            spec = spec.and((root, query, cb) -> {
+                if (startDate != null && endDate != null) {
+                    return cb.between(root.get("publicationDate"), startDate, endDate);
+                } else if (startDate != null) {
+                    return cb.greaterThanOrEqualTo(root.get("publicationDate"), startDate);
+                } else {
+                    return cb.lessThanOrEqualTo(root.get("publicationDate"), endDate);
+                }
+            });
+        }
+
+        // Filter by language if provided
+        if (language != null && !language.isEmpty()) {
+            spec = spec.and((root, query, cb) -> cb.equal(root.get("language"), language));
+        }
+
+        return bookCopyRepository.findAll(spec, pageable);
+    }
+
+
+
+
 
     @Override
     public BookCopy getBookCopyById(Long id) {

@@ -5,6 +5,9 @@ import com.aues.library.exceptions.PaymentProcessingException;
 import com.aues.library.model.Payment;
 import com.aues.library.service.PaymentService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -106,11 +109,11 @@ public class PaymentController {
         }
     }
 
-    @GetMapping
-    public ResponseEntity<List<Payment>> getAllPayments() {
-        List<Payment> payments = paymentService.getAllPayments();
-        return payments.isEmpty() ? new ResponseEntity<>(HttpStatus.NO_CONTENT) : new ResponseEntity<>(payments, HttpStatus.OK);
-    }
+//    @GetMapping
+//    public ResponseEntity<List<Payment>> getAllPayments() {
+//        List<Payment> payments = paymentService.getAllPayments();
+//        return payments.isEmpty() ? new ResponseEntity<>(HttpStatus.NO_CONTENT) : new ResponseEntity<>(payments, HttpStatus.OK);
+//    }
 
     @PutMapping("/{id}")
     public ResponseEntity<?> updatePaymentStatus(@PathVariable Long id, @RequestParam String paymentStatus) {
@@ -131,6 +134,17 @@ public class PaymentController {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
     }
+
+    @GetMapping
+    public Page<Payment> getFilteredPayments(
+            @RequestParam(required = false) String paymentStatus,
+            @RequestParam(required = false) String transactionId,
+            @RequestParam(required = false) Long orderId,
+            @PageableDefault(size = 10) Pageable pageable) {
+        return paymentService.getFilteredPayments(paymentStatus, transactionId, orderId, pageable);
+    }
+
+
 
 
 }

@@ -14,6 +14,9 @@ import com.paypal.base.rest.PayPalRESTException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
@@ -151,6 +154,25 @@ public class PaymentServiceImpl implements PaymentService {
             throw new PaymentProcessingException("Error completing PayPal payment", e);
         }
     }
+
+    public Page<Payment> getFilteredPayments(String paymentStatus, String transactionId, Long orderId, Pageable pageable) {
+        Specification<Payment> spec = Specification.where(null);
+
+        if (paymentStatus != null && !paymentStatus.isEmpty()) {
+            spec = spec.and((root, query, criteriaBuilder) -> criteriaBuilder.equal(root.get("paymentStatus"), paymentStatus));
+        }
+
+        if (transactionId != null && !transactionId.isEmpty()) {
+            spec = spec.and((root, query, criteriaBuilder) -> criteriaBuilder.equal(root.get("transactionId"), transactionId));
+        }
+
+        if (orderId != null) {
+            spec = spec.and((root, query, criteriaBuilder) -> criteriaBuilder.equal(root.get("order").get("id"), orderId));
+        }
+
+        return paymentRepository.findAll(spec, pageable);
+    }
+
 
 
 
